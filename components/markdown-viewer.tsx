@@ -264,27 +264,89 @@ export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, r
       // Handle numbered lists
       html = html.replace(/^\d+\. (.+)$/gim, '<li class="markdown-list-item">$1</li>')
 
-      // Handle paragraphs and line breaks - split by double newlines for paragraphs
-      const paragraphs = html.split(/\n\s*\n/)
-      html = paragraphs
-        .map((p) => p.trim())
-        .filter((p) => p.length > 0)
-        .map((p) => {
-          // Don't wrap headers, lists, tables, code blocks, or blockquotes in paragraphs
-          if (
-            p.startsWith("<h") ||
-            p.startsWith("<ul") ||
-            p.startsWith("<ol") ||
-            p.startsWith('<div class="markdown-code-container') ||
-            p.startsWith("<table") ||
-            p.startsWith("<blockquote") ||
-            p.startsWith("<hr")
-          ) {
-            return p
+      // Handle paragraphs and line breaks - improved logic
+      const lines = html.split("\n")
+      const result = []
+      let currentParagraph = []
+      const inCodeBlock = false
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim()
+
+        // Check if we're entering or leaving a code block
+        if (line.includes('<div class="markdown-code-container"')) {
+          // Finish current paragraph if any
+          if (currentParagraph.length > 0) {
+            const paragraphText = currentParagraph.join(" ").trim()
+            if (paragraphText) {
+              result.push(`<p class="markdown-paragraph">${paragraphText}</p>`)
+            }
+            currentParagraph = []
           }
-          return `<p class="markdown-paragraph">${p.replace(/\n/g, "<br>")}</p>`
-        })
-        .join("")
+
+          // Add the code block
+          let codeBlockHtml = line
+          i++
+          while (i < lines.length && !lines[i].includes("</div>")) {
+            codeBlockHtml += "\n" + lines[i]
+            i++
+          }
+          if (i < lines.length) {
+            codeBlockHtml += "\n" + lines[i] // Add closing </div>
+          }
+          result.push(codeBlockHtml)
+          continue
+        }
+
+        // Skip empty lines
+        if (!line) {
+          // Empty line - finish current paragraph if any
+          if (currentParagraph.length > 0) {
+            const paragraphText = currentParagraph.join(" ").trim()
+            if (paragraphText) {
+              result.push(`<p class="markdown-paragraph">${paragraphText}</p>`)
+            }
+            currentParagraph = []
+          }
+          continue
+        }
+
+        // Check if line is already a formatted element (headers, lists, tables, etc.)
+        if (
+          line.startsWith("<h") ||
+          line.startsWith("<ul") ||
+          line.startsWith("<ol") ||
+          line.startsWith("<table") ||
+          line.startsWith("<blockquote") ||
+          line.startsWith("<hr") ||
+          line.startsWith("<li")
+        ) {
+          // Finish current paragraph if any
+          if (currentParagraph.length > 0) {
+            const paragraphText = currentParagraph.join(" ").trim()
+            if (paragraphText) {
+              result.push(`<p class="markdown-paragraph">${paragraphText}</p>`)
+            }
+            currentParagraph = []
+          }
+
+          result.push(line)
+          continue
+        }
+
+        // Regular text line - add to current paragraph
+        currentParagraph.push(line)
+      }
+
+      // Finish any remaining paragraph
+      if (currentParagraph.length > 0) {
+        const paragraphText = currentParagraph.join(" ").trim()
+        if (paragraphText) {
+          result.push(`<p class="markdown-paragraph">${paragraphText}</p>`)
+        }
+      }
+
+      html = result.join("\n")
 
       return html
     }
