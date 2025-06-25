@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react"
 import { FileExplorer } from "@/components/file-explorer"
 import { MarkdownViewer } from "@/components/markdown-viewer"
+import { FileNavigation } from "@/components/file-navigation"
+import { FileBreadcrumb } from "@/components/file-breadcrumb"
 import { FolderOpen } from "lucide-react"
 import { DragDropZone } from "@/components/drag-drop-zone"
 import { FileInput } from "@/components/file-input"
@@ -141,6 +143,28 @@ export default function MarkdownReaderApp() {
     return root
   }
 
+  const findFileByPath = useCallback(
+    (path: string): FileItem | null => {
+      if (!rootDirectory) return null
+
+      const searchInItem = (item: FileItem): FileItem | null => {
+        if (item.path === path) return item
+
+        if (item.children) {
+          for (const child of item.children) {
+            const found = searchInItem(child)
+            if (found) return found
+          }
+        }
+
+        return null
+      }
+
+      return searchInItem(rootDirectory)
+    },
+    [rootDirectory],
+  )
+
   const handleDragDropFiles = useCallback((files: File[]) => {
     if (files.length === 0) return
 
@@ -189,6 +213,65 @@ export default function MarkdownReaderApp() {
       setIsLoading(false)
     }
   }, [])
+
+  const handleFileNavigate = useCallback(
+    (filePath: string) => {
+      const targetFile = findFileByPath(filePath)
+      if (targetFile) {
+        handleFileSelect(targetFile)
+      } else {
+        console.warn("File not found:", filePath)
+      }
+    },
+    [findFileByPath, handleFileSelect],
+  )
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (!selectedFile || !rootDirectory) return
+
+      // Get sibling files for navigation
+      const getSiblingFiles = (currentFile: FileItem, rootDirectory: FileItem): FileItem[] => {
+        const findParentAndSiblings = (item: FileItem, targetPath: string): FileItem[] | null => {
+          if (item.children) {
+            const isDirectChild = item.children.some((child) => child.path === targetPath)
+            if (isDirectChild) {
+              return item.children.filter((child) => child.type === "file")
+            }
+
+            for (const child of item.children) {
+              const result = findParentAndSiblings(child, targetPath)
+              if (result) return result
+            }
+          }
+          return null
+        }
+
+        return findParentAndSiblings(rootDirectory, currentFile.path) || []
+      }
+
+      const siblingFiles = getSiblingFiles(selectedFile, rootDirectory)
+      const currentIndex = siblingFiles.findIndex((file) => file.path === selectedFile.path)
+
+      if (e.key === "ArrowUp" && e.ctrlKey) {
+        e.preventDefault()
+        const prevFile = currentIndex > 0 ? siblingFiles[currentIndex - 1] : null
+        if (prevFile) handleFileSelect(prevFile)
+      } else if (e.key === "ArrowDown" && e.ctrlKey) {
+        e.preventDefault()
+        const nextFile = currentIndex < siblingFiles.length - 1 ? siblingFiles[currentIndex + 1] : null
+        if (nextFile) handleFileSelect(nextFile)
+      }
+    },
+    [selectedFile, rootDirectory, handleFileSelect],
+  )
+
+  // Add keyboard event listener
+  useState(() => {
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  })
 
   return (
     <SidebarProvider>
@@ -239,21 +322,35 @@ export default function MarkdownReaderApp() {
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <h1 className="text-lg font-semibold">Markdown Reader</h1>
               {selectedFile && (
                 <>
                   <Separator orientation="vertical" className="h-4" />
-                  <span className="text-sm text-muted-foreground">{selectedFile.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <FileBreadcrumb
+                      currentFile={selectedFile}
+                      rootDirectory={rootDirectory}
+                      onFileSelect={handleFileSelect}
+                    />
+                  </div>
                 </>
               )}
             </div>
+            {/* Navigation Controls */}
+            <FileNavigation currentFile={selectedFile} rootDirectory={rootDirectory} onFileSelect={handleFileSelect} />
           </header>
 
           {/* Main Content */}
           <main className="flex-1 overflow-hidden">
             {selectedFile ? (
-              <MarkdownViewer fileName={selectedFile.name} content={fileContent} isLoading={isLoading} />
+              <MarkdownViewer
+                fileName={selectedFile.name}
+                content={fileContent}
+                isLoading={isLoading}
+                onFileNavigate={handleFileNavigate}
+                rootDirectory={rootDirectory}
+              />
             ) : (
               <div className="flex-1 flex items-center justify-center text-center text-muted-foreground h-full">
                 <div>
@@ -262,6 +359,7 @@ export default function MarkdownReaderApp() {
                   </div>
                   <h3 className="text-lg font-medium mb-2">No file selected</h3>
                   <p>Choose a markdown file from the sidebar to view its content</p>
+                  <p className="text-sm mt-2">Use Ctrl+↑/↓ to navigate between files</p>
                 </div>
               </div>
             )}

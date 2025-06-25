@@ -2,20 +2,90 @@
 
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
+import type { FileItem } from "@/app/page"
 
 interface MarkdownViewerProps {
   fileName: string
   content: string
   isLoading: boolean
+  onFileNavigate?: (filePath: string) => void
+  rootDirectory?: FileItem | null
 }
 
-export function MarkdownViewer({ fileName, content, isLoading }: MarkdownViewerProps) {
+export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, rootDirectory }: MarkdownViewerProps) {
   const [htmlContent, setHtmlContent] = useState("")
+
+  // Function to find a file in the directory tree by name or path
+  const findFileInTree = (tree: FileItem | null, targetName: string): FileItem | null => {
+    if (!tree) return null
+
+    const searchInItem = (item: FileItem): FileItem | null => {
+      // Check if this item matches (by name or path)
+      if (item.type === "file") {
+        const itemNameLower = item.name.toLowerCase()
+        const targetLower = targetName.toLowerCase()
+
+        // Match by exact name
+        if (itemNameLower === targetLower) return item
+
+        // Match by name without extension
+        if (itemNameLower === targetLower + ".md") return item
+        if (itemNameLower.replace(".md", "") === targetLower) return item
+
+        // Match by path segments
+        if (item.path.toLowerCase().includes(targetLower)) return item
+      }
+
+      // Search in children
+      if (item.children) {
+        for (const child of item.children) {
+          const found = searchInItem(child)
+          if (found) return found
+        }
+      }
+
+      return null
+    }
+
+    return searchInItem(tree)
+  }
+
+  // Function to resolve markdown links to file paths
+  const resolveMarkdownLink = (linkHref: string): string | null => {
+    if (!rootDirectory || !onFileNavigate) return null
+
+    // Remove any anchors/fragments
+    const cleanHref = linkHref.split("#")[0]
+
+    // Skip external links
+    if (cleanHref.startsWith("http://") || cleanHref.startsWith("https://")) {
+      return null
+    }
+
+    // Try to find the file
+    let targetFile: FileItem | null = null
+
+    // Try different resolution strategies
+    const strategies = [
+      cleanHref, // Direct path
+      cleanHref + ".md", // Add .md extension
+      cleanHref.replace(/^\.\//, ""), // Remove relative prefix
+      cleanHref.replace(/^\//, ""), // Remove absolute prefix
+      cleanHref.split("/").pop() || "", // Just the filename
+    ]
+
+    for (const strategy of strategies) {
+      targetFile = findFileInTree(rootDirectory, strategy)
+      if (targetFile) break
+    }
+
+    return targetFile ? targetFile.path : null
+  }
 
   useEffect(() => {
     if (!content) return
 
-    // Simple markdown to HTML conversion
+    // Enhanced markdown to HTML conversion with link handling
     const convertMarkdownToHtml = (markdown: string) => {
       let html = markdown
         // Headers
@@ -32,8 +102,17 @@ export function MarkdownViewer({ fileName, content, isLoading }: MarkdownViewerP
         .replace(/```([\s\S]*?)```/gim, "<pre><code>$1</code></pre>")
         // Inline code
         .replace(/`(.*?)`/gim, "<code>$1</code>")
-        // Links
-        .replace(/\[([^\]]+)\]$$([^)]+)$$/gim, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+        // Links - Enhanced to handle internal links
+        .replace(/\[([^\]]+)\]$$([^)]+)$$/gim, (match, text, href) => {
+          const resolvedPath = resolveMarkdownLink(href)
+          if (resolvedPath && onFileNavigate) {
+            return `<a href="#" data-internal-link="${resolvedPath}" class="internal-link">${text}</a>`
+          } else if (href.startsWith("http://") || href.startsWith("https://")) {
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="external-link">${text}</a>`
+          } else {
+            return `<a href="${href}" class="broken-link" title="File not found: ${href}">${text}</a>`
+          }
+        })
         // Line breaks
         .replace(/\n\n/gim, "</p><p>")
         .replace(/\n/gim, "<br>")
@@ -55,7 +134,24 @@ export function MarkdownViewer({ fileName, content, isLoading }: MarkdownViewerP
     }
 
     setHtmlContent(convertMarkdownToHtml(content))
-  }, [content])
+  }, [content, rootDirectory, onFileNavigate])
+
+  // Handle clicks on internal links
+  useEffect(() => {
+    const handleLinkClick = (e: Event) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === "A" && target.hasAttribute("data-internal-link")) {
+        e.preventDefault()
+        const filePath = target.getAttribute("data-internal-link")
+        if (filePath && onFileNavigate) {
+          onFileNavigate(filePath)
+        }
+      }
+    }
+
+    document.addEventListener("click", handleLinkClick)
+    return () => document.removeEventListener("click", handleLinkClick)
+  }, [onFileNavigate])
 
   if (isLoading) {
     return (
