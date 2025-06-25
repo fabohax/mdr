@@ -68,90 +68,235 @@
   }
 }
 
-/* Custom styles for markdown content */
-.prose {
+/* Enhanced Markdown Styling */
+.markdown-content {
+  @apply text-foreground leading-relaxed;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+  line-height: 1.7;
+}
+
+/* Headers */
+.markdown-h1 {
+  @apply text-4xl font-bold mb-8 mt-12 text-foreground border-b-2 border-border pb-4;
+  color: hsl(var(--foreground));
+  scroll-margin-top: 2rem;
+}
+
+.markdown-h2 {
+  @apply text-3xl font-semibold mb-6 mt-10 text-foreground border-b border-border pb-2;
+  color: hsl(var(--foreground));
+  scroll-margin-top: 2rem;
+}
+
+.markdown-h3 {
+  @apply text-2xl font-medium mb-4 mt-8 text-foreground;
+  color: hsl(var(--foreground));
+  scroll-margin-top: 2rem;
+}
+
+/* Paragraphs */
+.markdown-paragraph {
+  @apply mb-6 text-foreground leading-relaxed;
   color: hsl(var(--foreground));
 }
 
-.prose h1 {
-  @apply text-3xl font-bold mb-6 mt-8 text-foreground border-b border-border pb-2;
+/* Lists */
+.markdown-list {
+  @apply mb-6 ml-6 space-y-2;
 }
 
-.prose h2 {
-  @apply text-2xl font-semibold mb-4 mt-6 text-foreground;
+.markdown-list-item {
+  @apply text-foreground leading-relaxed;
+  color: hsl(var(--foreground));
 }
 
-.prose h3 {
-  @apply text-xl font-medium mb-3 mt-5 text-foreground;
+.markdown-list {
+  list-style-type: disc;
 }
 
-.prose p {
-  @apply mb-4 text-foreground leading-relaxed;
+.markdown-list .markdown-list {
+  @apply mt-2 mb-2;
+  list-style-type: circle;
 }
 
-.prose ul {
-  @apply mb-4 ml-6 list-disc;
+/* Code */
+.markdown-inline-code {
+  @apply bg-muted px-2 py-1 rounded-md text-sm font-mono border;
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--muted));
+  border-color: hsl(var(--border));
 }
 
-.prose ol {
-  @apply mb-4 ml-6 list-decimal;
+.markdown-code-block {
+  @apply bg-muted p-6 rounded-lg overflow-x-auto mb-6 border;
+  background-color: hsl(var(--muted));
+  border-color: hsl(var(--border));
 }
 
-.prose li {
-  @apply mb-1 text-foreground;
+.markdown-code-block code {
+  @apply text-sm font-mono;
+  color: hsl(var(--foreground));
+  background: transparent;
 }
 
-.prose code {
-  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground;
+/* Blockquotes */
+.markdown-blockquote {
+  @apply border-l-4 border-primary pl-6 py-2 mb-6 italic bg-muted/30 rounded-r-lg;
+  color: hsl(var(--muted-foreground));
+  border-left-color: hsl(var(--primary));
+  background-color: hsl(var(--muted) / 0.3);
 }
 
-.prose pre {
-  @apply bg-muted p-4 rounded-lg overflow-x-auto mb-4;
+/* Enhanced Link Styles */
+.markdown-link {
+  @apply inline-flex items-center gap-1 transition-all duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5;
+  text-decoration: none;
 }
 
-.prose pre code {
-  @apply bg-transparent p-0 text-sm;
+.markdown-link:hover {
+  @apply underline;
 }
 
-.prose a {
-  @apply underline transition-colors;
+.markdown-link-text {
+  @apply font-medium;
 }
 
-/* Internal links - clickable and styled */
-.prose .internal-link {
-  @apply text-blue-600 hover:text-blue-800 cursor-pointer;
+/* Internal Links */
+.markdown-link-internal {
+  @apply text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer;
+  color: #2563eb;
 }
 
-.prose .external-link {
-  @apply text-blue-600 hover:text-blue-800;
+.markdown-link-internal:hover {
+  background-color: #eff6ff;
+  color: #1d4ed8;
 }
 
-/* Broken links - styled to indicate they're not found */
-.prose .broken-link {
-  @apply text-red-500 hover:text-red-700 cursor-help;
+.markdown-link-internal:focus {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
 }
 
-.prose strong {
-  @apply font-semibold text-foreground;
+/* External Links */
+.markdown-link-external {
+  @apply text-green-600 hover:text-green-800 hover:bg-green-50;
+  color: #059669;
 }
 
-.prose em {
-  @apply italic text-foreground;
+.markdown-link-external:hover {
+  background-color: #ecfdf5;
+  color: #047857;
 }
 
-.prose blockquote {
-  @apply border-l-4 border-border pl-4 italic text-muted-foreground mb-4;
+.markdown-external-icon {
+  @apply opacity-70;
+  flex-shrink: 0;
+}
+
+/* Broken Links */
+.markdown-link-broken {
+  @apply text-red-500 hover:text-red-700 hover:bg-red-50 cursor-help;
+  color: #dc2626;
+}
+
+.markdown-link-broken:hover {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.markdown-broken-icon {
+  @apply opacity-70;
+  flex-shrink: 0;
 }
 
 /* Dark mode link styles */
-.dark .prose .internal-link {
-  @apply text-blue-400 hover:text-blue-300;
+.dark .markdown-link-internal {
+  color: #60a5fa;
 }
 
-.dark .prose .external-link {
-  @apply text-blue-400 hover:text-blue-300;
+.dark .markdown-link-internal:hover {
+  background-color: #1e3a8a20;
+  color: #93c5fd;
 }
 
-.dark .prose .broken-link {
-  @apply text-red-400 hover:text-red-300;
+.dark .markdown-link-external {
+  color: #34d399;
+}
+
+.dark .markdown-link-external:hover {
+  background-color: #06402920;
+  color: #6ee7b7;
+}
+
+.dark .markdown-link-broken {
+  color: #f87171;
+}
+
+.dark .markdown-link-broken:hover {
+  background-color: #7f1d1d20;
+  color: #fca5a5;
+}
+
+/* Text formatting */
+.markdown-bold {
+  @apply font-semibold;
+  color: hsl(var(--foreground));
+}
+
+.markdown-italic {
+  @apply italic;
+  color: hsl(var(--foreground));
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .markdown-h1 {
+    @apply text-3xl mb-6 mt-8;
+  }
+
+  .markdown-h2 {
+    @apply text-2xl mb-4 mt-6;
+  }
+
+  .markdown-h3 {
+    @apply text-xl mb-3 mt-5;
+  }
+
+  .markdown-code-block {
+    @apply p-4;
+  }
+
+  .markdown-list {
+    @apply ml-4;
+  }
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection styling */
+.markdown-content ::selection {
+  background-color: hsl(var(--primary) / 0.2);
+}
+
+/* Focus styles for accessibility */
+.markdown-content *:focus {
+  @apply outline-none ring-2 ring-primary ring-offset-2 rounded-sm;
+}
+
+/* Print styles */
+@media print {
+  .markdown-content {
+    @apply text-black;
+  }
+
+  .markdown-link {
+    @apply text-black underline;
+  }
+
+  .markdown-link-external::after {
+    content: " (" attr(href) ")";
+    @apply text-xs text-gray-600;
+  }
 }

@@ -40,21 +40,22 @@ export function FileBreadcrumb({ currentFile, rootDirectory, onFileSelect }: Fil
   return (
     <div className="flex items-center gap-1 text-sm text-muted-foreground overflow-hidden">
       {breadcrumbPath.map((item, index) => (
-        <div key={item.path} className="flex items-center gap-1">
-          {index > 0 && <ChevronRight className="w-3 h-3 shrink-0" />}
+        <div key={item.path} className="flex items-center gap-1 min-w-0">
+          {index > 0 && <ChevronRight className="w-3 h-3 shrink-0 text-muted-foreground/60" />}
           <button
             onClick={() => item.type === "file" && onFileSelect(item)}
-            className={`flex items-center gap-1 hover:text-foreground transition-colors truncate ${
-              item.type === "file" ? "cursor-pointer" : "cursor-default"
-            } ${index === breadcrumbPath.length - 1 ? "text-foreground font-medium" : ""}`}
+            className={`flex items-center gap-1.5 hover:text-foreground transition-colors truncate rounded-sm px-1.5 py-1 -mx-1.5 -my-1 ${
+              item.type === "file" ? "cursor-pointer hover:bg-accent" : "cursor-default"
+            } ${index === breadcrumbPath.length - 1 ? "text-foreground font-medium bg-accent/50" : ""}`}
             disabled={item.type === "directory"}
+            title={item.name}
           >
             {item.type === "directory" ? (
-              <Folder className="w-3 h-3 shrink-0" />
+              <Folder className="w-3 h-3 shrink-0 text-blue-500" />
             ) : (
-              <File className="w-3 h-3 shrink-0" />
+              <File className="w-3 h-3 shrink-0 text-gray-500" />
             )}
-            <span className="truncate">{item.name}</span>
+            <span className="truncate text-xs">{item.name}</span>
           </button>
         </div>
       ))}

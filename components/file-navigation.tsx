@@ -2,6 +2,7 @@
 
 import { ChevronUp, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import type { FileItem } from "@/app/page"
 
 interface FileNavigationProps {
@@ -62,20 +63,21 @@ export function FileNavigation({ currentFile, rootDirectory, onFileSelect }: Fil
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       <Button
         variant="outline"
         size="sm"
         onClick={() => prevFile && onFileSelect(prevFile)}
         disabled={!prevFile}
         title={prevFile ? `Previous: ${prevFile.name}` : "No previous file"}
+        className="h-8 px-3"
       >
         <ChevronUp className="w-4 h-4" />
       </Button>
 
-      <span className="text-sm text-muted-foreground px-2">
+      <Badge variant="secondary" className="px-3 py-1 text-xs font-medium">
         {currentIndex} of {totalFiles}
-      </span>
+      </Badge>
 
       <Button
         variant="outline"
@@ -83,6 +85,7 @@ export function FileNavigation({ currentFile, rootDirectory, onFileSelect }: Fil
         onClick={() => nextFile && onFileSelect(nextFile)}
         disabled={!nextFile}
         title={nextFile ? `Next: ${nextFile.name}` : "No next file"}
+        className="h-8 px-3"
       >
         <ChevronDown className="w-4 h-4" />
       </Button>
