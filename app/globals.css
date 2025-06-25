@@ -5,19 +5,19 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 0%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary-foreground: 0 0% 0%;
     --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 0 0% 20%;
     --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
@@ -70,18 +70,22 @@
 
 /* Enhanced Markdown Styling */
 .markdown-content {
-  @apply text-foreground;
+  color: #000000 !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
     "Droid Sans", "Helvetica Neue", sans-serif;
   line-height: 1.7;
   font-size: 16px;
-  color: hsl(var(--foreground));
+  max-width: none;
+}
+
+.markdown-content > * + * {
+  margin-top: 1.25rem;
 }
 
 /* Headers with enhanced styling */
 .markdown-h1 {
-  @apply text-4xl font-bold mb-8 mt-12 text-foreground border-b-2 border-primary/20 pb-4;
-  color: hsl(var(--foreground));
+  @apply text-4xl font-bold mb-6 mt-10 border-b-2 border-primary/20 pb-4;
+  color: #000000 !important;
   scroll-margin-top: 2rem;
   position: relative;
 }
@@ -98,34 +102,42 @@
 }
 
 .markdown-h2 {
-  @apply text-3xl font-semibold mb-6 mt-10 text-foreground border-b border-border pb-3;
-  color: hsl(var(--foreground));
+  @apply text-3xl font-semibold mb-5 mt-8 border-b border-border pb-3;
+  color: #000000 !important;
   scroll-margin-top: 2rem;
 }
 
 .markdown-h3 {
-  @apply text-2xl font-medium mb-4 mt-8 text-foreground;
-  color: hsl(var(--foreground));
+  @apply text-2xl font-medium mb-4 mt-6;
+  color: #000000 !important;
   scroll-margin-top: 2rem;
 }
 
 /* Paragraphs with better spacing */
 .markdown-paragraph {
-  @apply mb-6 text-foreground leading-relaxed;
-  color: hsl(var(--foreground));
-  text-align: justify;
-  hyphens: auto;
+  @apply mb-5 leading-relaxed;
+  color: #000000 !important;
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+/* Better spacing for the first paragraph after headers */
+.markdown-h1 + .markdown-paragraph,
+.markdown-h2 + .markdown-paragraph,
+.markdown-h3 + .markdown-paragraph {
+  margin-top: 0.75rem;
 }
 
 /* Enhanced Lists */
 .markdown-list {
-  @apply mb-6 ml-6 space-y-3;
+  @apply mb-5 ml-6 space-y-2;
 }
 
 .markdown-list-item {
-  @apply text-foreground leading-relaxed;
-  color: hsl(var(--foreground));
+  @apply leading-relaxed;
+  color: #000000 !important;
   position: relative;
+  margin-bottom: 0.5rem;
 }
 
 .markdown-list {
@@ -143,7 +155,7 @@
 }
 
 .markdown-list .markdown-list {
-  @apply mt-3 mb-3 ml-4;
+  @apply mt-2 mb-2 ml-4;
 }
 
 .markdown-list .markdown-list .markdown-list-item::before {
@@ -176,48 +188,164 @@
   @apply bg-primary border-primary;
 }
 
-/* Enhanced Code Styling */
+/* Enhanced Code Container with Header */
+.markdown-code-container {
+  @apply mb-4 rounded-lg border border-border overflow-hidden shadow-sm;
+  background-color: #f8f9fa;
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+
+.markdown-code-header {
+  @apply flex items-center justify-end px-3 py-1 border-b border-border;
+  background-color: #e9ecef;
+  min-height: 32px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.markdown-code-language {
+  display: none;
+}
+
+.markdown-copy-button {
+  @apply flex items-center gap-1 px-2 py-1 text-xs transition-colors rounded border border-transparent hover:border-border hover:bg-background;
+  background: transparent;
+  cursor: pointer;
+  color: #6c757d;
+  position: relative;
+  z-index: 11;
+}
+
+.markdown-copy-button:hover {
+  background-color: #ffffff;
+  border-color: #dee2e6;
+  color: #495057;
+}
+
+.markdown-copy-button .hidden {
+  display: none;
+}
+
+/* Enhanced Code Styling with Better Contrast and Spacing */
 .markdown-inline-code {
-  @apply bg-muted px-2 py-1 rounded-md text-sm font-mono border;
-  color: hsl(var(--foreground));
-  background-color: hsl(var(--muted));
-  border-color: hsl(var(--border));
+  @apply px-1.5 py-0.5 rounded text-sm font-mono border;
+  color: #000000 !important;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
   font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro", monospace;
 }
 
 .markdown-code-block {
-  @apply bg-muted p-6 rounded-lg overflow-x-auto mb-6 border shadow-sm;
-  background-color: hsl(var(--muted));
-  border-color: hsl(var(--border));
-  position: relative;
-}
-
-.markdown-code-block::before {
-  content: attr(data-language);
-  position: absolute;
-  top: 0.5rem;
-  right: 0.75rem;
-  font-size: 0.75rem;
-  color: hsl(var(--muted-foreground));
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-}
-
-.markdown-code {
-  @apply text-sm;
-  color: hsl(var(--foreground));
-  background: transparent;
+  @apply px-3 py-3 m-0 overflow-x-auto;
+  background-color: #f8f9fa !important;
+  border: none;
+  border-radius: 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #000000 !important;
   font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro", monospace;
-  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.markdown-code-block code {
+  @apply text-base;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro", monospace;
+  background: transparent !important;
+  color: #000000 !important;
+  font-weight: 400;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Prism.js Theme Overrides for Better Contrast and Spacing */
+.markdown-content pre[class*="language-"] {
+  background: #f8f9fa !important;
+  margin: 0 !important;
+  padding: 0.75rem !important;
+  border-radius: 0 !important;
+  overflow-x: auto;
+  color: #000000 !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+}
+
+.markdown-content code[class*="language-"] {
+  background: transparent !important;
+  color: #000000 !important;
+  font-weight: 400 !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+}
+
+/* Light mode Prism token colors for better contrast */
+.markdown-content .token.comment,
+.markdown-content .token.prolog,
+.markdown-content .token.doctype,
+.markdown-content .token.cdata {
+  color: #6a737d !important;
+  font-style: italic;
+}
+
+.markdown-content .token.punctuation {
+  color: #24292e !important;
+}
+
+.markdown-content .token.property,
+.markdown-content .token.tag,
+.markdown-content .token.boolean,
+.markdown-content .token.number,
+.markdown-content .token.constant,
+.markdown-content .token.symbol,
+.markdown-content .token.deleted {
+  color: #005cc5 !important;
+}
+
+.markdown-content .token.selector,
+.markdown-content .token.attr-name,
+.markdown-content .token.string,
+.markdown-content .token.char,
+.markdown-content .token.builtin,
+.markdown-content .token.inserted {
+  color: #032f62 !important;
+}
+
+.markdown-content .token.operator,
+.markdown-content .token.entity,
+.markdown-content .token.url,
+.markdown-content .language-css .token.string,
+.markdown-content .style .token.string {
+  color: #d73a49 !important;
+}
+
+.markdown-content .token.atrule,
+.markdown-content .token.attr-value,
+.markdown-content .token.keyword {
+  color: #d73a49 !important;
+}
+
+.markdown-content .token.function,
+.markdown-content .token.class-name {
+  color: #6f42c1 !important;
+}
+
+.markdown-content .token.regex,
+.markdown-content .token.important,
+.markdown-content .token.variable {
+  color: #e36209 !important;
 }
 
 /* Enhanced Blockquotes */
 .markdown-blockquote {
-  @apply border-l-4 border-primary pl-6 py-4 mb-6 bg-muted/30 rounded-r-lg shadow-sm;
-  color: hsl(var(--muted-foreground));
+  @apply border-l-4 border-primary pl-6 py-4 mb-5 rounded-r-lg shadow-sm;
+  color: #495057 !important;
   border-left-color: hsl(var(--primary));
-  background-color: hsl(var(--muted) / 0.3);
+  background-color: #f8f9fa;
   font-style: italic;
   position: relative;
 }
@@ -235,31 +363,33 @@
 
 /* Horizontal Rules */
 .markdown-hr {
-  @apply my-8 border-0 h-px bg-gradient-to-r from-transparent via-border to-transparent;
+  @apply my-6 border-0 h-px bg-gradient-to-r from-transparent via-border to-transparent;
 }
 
 /* Enhanced Tables */
 .markdown-table {
-  @apply w-full mb-6 border border-border rounded-lg overflow-hidden shadow-sm;
+  @apply w-full mb-5 border border-border rounded-lg overflow-hidden shadow-sm;
   border-collapse: separate;
   border-spacing: 0;
 }
 
 .markdown-thead {
-  @apply bg-muted;
+  background-color: #f8f9fa;
 }
 
 .markdown-th {
-  @apply px-4 py-3 text-left font-semibold text-foreground border-b border-border;
-  background-color: hsl(var(--muted));
+  @apply px-4 py-3 text-left font-semibold border-b border-border;
+  background-color: #f8f9fa;
+  color: #000000 !important;
 }
 
 .markdown-tbody .markdown-tr:nth-child(even) {
-  @apply bg-muted/30;
+  background-color: #f8f9fa;
 }
 
 .markdown-td {
-  @apply px-4 py-3 text-foreground border-b border-border;
+  @apply px-4 py-3 border-b border-border;
+  color: #000000 !important;
 }
 
 .markdown-tbody .markdown-tr:last-child .markdown-td {
@@ -285,18 +415,15 @@
 /* Internal Links */
 .markdown-link-internal {
   @apply text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer;
-  color: #2563eb;
+  color: #2563eb !important;
   border: 1px solid transparent;
 }
 
 .markdown-link-internal:hover {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  border-color: #bfdbfe;
-}
-
-.markdown-link-internal:focus {
   @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe;
 }
 
 .markdown-internal-icon {
@@ -306,15 +433,19 @@
 
 /* External Links */
 .markdown-link-external {
-  @apply text-green-600 hover:text-green-800 hover:bg-green-50;
-  color: #059669;
+  @apply text-blue-600 hover:text-blue-800 hover:bg-blue-50 font-medium;
+  color: #1d4ed8 !important;
   border: 1px solid transparent;
+  text-decoration: underline;
+  text-decoration-color: #3b82f6;
+  text-underline-offset: 2px;
 }
 
 .markdown-link-external:hover {
-  background-color: #ecfdf5;
-  color: #047857;
-  border-color: #a7f3d0;
+  background-color: #eff6ff !important;
+  color: #1e40af !important;
+  border-color: #bfdbfe;
+  text-decoration-color: #1e40af;
 }
 
 .markdown-external-icon {
@@ -325,13 +456,13 @@
 /* Broken Links */
 .markdown-link-broken {
   @apply text-red-500 hover:text-red-700 hover:bg-red-50 cursor-help;
-  color: #dc2626;
+  color: #dc2626 !important;
   border: 1px solid transparent;
 }
 
 .markdown-link-broken:hover {
-  background-color: #fef2f2;
-  color: #b91c1c;
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
   border-color: #fecaca;
 }
 
@@ -343,52 +474,127 @@
 /* Text Formatting */
 .markdown-bold {
   @apply font-semibold;
-  color: hsl(var(--foreground));
+  color: #000000 !important;
 }
 
 .markdown-italic {
   @apply italic;
-  color: hsl(var(--foreground));
+  color: #000000 !important;
 }
 
 .markdown-strikethrough {
   @apply line-through opacity-75;
-  color: hsl(var(--muted-foreground));
+  color: #666666 !important;
 }
 
 /* Dark mode adjustments */
+.dark .markdown-content {
+  color: #ffffff !important;
+}
+
+.dark .markdown-h1,
+.dark .markdown-h2,
+.dark .markdown-h3,
+.dark .markdown-paragraph,
+.dark .markdown-list-item,
+.dark .markdown-bold,
+.dark .markdown-italic,
+.dark .markdown-th,
+.dark .markdown-td {
+  color: #ffffff !important;
+}
+
+/* Dark mode code adjustments */
+.dark .markdown-inline-code,
+.dark .markdown-code-block,
+.dark .markdown-code-block code {
+  color: #ffffff !important;
+  background-color: #2d3748 !important;
+}
+
+.dark .markdown-code-container {
+  background-color: #2d3748;
+}
+
+.dark .markdown-code-header {
+  background-color: #4a5568;
+}
+
+.dark .markdown-content pre[class*="language-"] {
+  background: #2d3748 !important;
+  color: #ffffff !important;
+}
+
+.dark .markdown-content code[class*="language-"] {
+  color: #ffffff !important;
+}
+
+.dark .markdown-copy-button:hover {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark .markdown-strikethrough {
+  color: #a0aec0 !important;
+}
+
 .dark .markdown-link-internal {
-  color: #60a5fa;
+  color: #60a5fa !important;
 }
 
 .dark .markdown-link-internal:hover {
-  background-color: #1e3a8a20;
-  color: #93c5fd;
+  background-color: #1e3a8a20 !important;
+  color: #93c5fd !important;
   border-color: #3b82f650;
 }
 
 .dark .markdown-link-external {
-  color: #34d399;
+  color: #34d399 !important;
 }
 
 .dark .markdown-link-external:hover {
-  background-color: #06402920;
-  color: #6ee7b7;
+  background-color: #06402920 !important;
+  color: #6ee7b7 !important;
   border-color: #10b98150;
 }
 
 .dark .markdown-link-broken {
-  color: #f87171;
+  color: #f87171 !important;
 }
 
 .dark .markdown-link-broken:hover {
-  background-color: #7f1d1d20;
-  color: #fca5a5;
+  background-color: #7f1d1d20 !important;
+  color: #fca5a5 !important;
   border-color: #ef444450;
 }
 
 .dark .markdown-blockquote::before {
   color: hsl(var(--primary) / 0.4);
+}
+
+.dark .markdown-code-header {
+  background-color: #4a5568;
+  border-color: #2d3748;
+}
+
+.dark .markdown-copy-button:hover {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark .markdown-table {
+  background-color: #2d3748;
+}
+
+.dark .markdown-thead,
+.dark .markdown-th {
+  background-color: #4a5568;
+}
+
+.dark .markdown-tbody .markdown-tr:nth-child(even) {
+  background-color: #4a5568;
 }
 
 /* Responsive Design */
@@ -398,19 +604,19 @@
   }
 
   .markdown-h1 {
-    @apply text-3xl mb-6 mt-8;
+    @apply text-3xl mb-5 mt-6;
   }
 
   .markdown-h2 {
-    @apply text-2xl mb-4 mt-6;
+    @apply text-2xl mb-4 mt-5;
   }
 
   .markdown-h3 {
-    @apply text-xl mb-3 mt-5;
+    @apply text-xl mb-3 mt-4;
   }
 
   .markdown-code-block {
-    @apply p-4;
+    @apply p-3;
   }
 
   .markdown-list {
@@ -424,6 +630,14 @@
   .markdown-th,
   .markdown-td {
     @apply px-3 py-2;
+  }
+
+  .markdown-code-header {
+    @apply px-3 py-2;
+  }
+
+  .markdown-copy-button {
+    @apply px-1 py-1;
   }
 }
 
@@ -476,8 +690,12 @@ html {
     color: #666;
   }
 
-  .markdown-code-block {
+  .markdown-code-container {
     border: 1px solid #ccc;
     background: #f5f5f5;
+  }
+
+  .markdown-copy-button {
+    display: none;
   }
 }

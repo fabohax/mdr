@@ -14,6 +14,7 @@ interface MarkdownViewerProps {
 
 export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, rootDirectory }: MarkdownViewerProps) {
   const [htmlContent, setHtmlContent] = useState("")
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   // Function to find a file in the directory tree by name or path
   const findFileInTree = (tree: FileItem | null, targetName: string): FileItem | null => {
@@ -84,11 +85,31 @@ export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, r
     return targetFile ? { type: "internal", path: targetFile.path } : { type: "broken" }
   }
 
+  // Function to escape HTML
+  const escapeHtml = (text: string): string => {
+    const div = document.createElement("div")
+    div.textContent = text
+    return div.innerHTML
+  }
+
+  // Function to copy code to clipboard
+  const copyToClipboard = async (code: string, codeId: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedCode(codeId)
+      setTimeout(() => setCopiedCode(null), 2000)
+    } catch (err) {
+      console.error("Failed to copy code:", err)
+    }
+  }
+
   useEffect(() => {
     if (!content) return
 
     // Enhanced markdown to HTML conversion with comprehensive formatting
     const convertMarkdownToHtml = (markdown: string) => {
+      let codeBlockCounter = 0
+
       let html = markdown
         // Headers with better styling and anchor links
         .replace(/^### (.*$)/gim, '<h3 class="markdown-h3" id="$1">$1</h3>')
@@ -105,10 +126,45 @@ export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, r
         .replace(/\*(.*?)\*/gim, '<em class="markdown-italic">$1</em>')
         .replace(/_(.*?)_/gim, '<em class="markdown-italic">$1</em>')
 
-        // Code blocks with language detection
+        // Code blocks with language detection and syntax highlighting
         .replace(/```(\w+)?\n?([\s\S]*?)```/gim, (match, lang, code) => {
-          const language = lang ? ` data-language="${lang}"` : ""
-          return `<pre class="markdown-code-block"${language}><code class="markdown-code">${code.trim()}</code></pre>`
+          const codeId = `code-block-${++codeBlockCounter}`
+          const language = lang ? lang.toLowerCase() : "text"
+          const escapedCode = escapeHtml(code.trim())
+
+          // Map common language aliases
+          const languageMap: { [key: string]: string } = {
+            js: "javascript",
+            ts: "typescript",
+            jsx: "javascript",
+            tsx: "typescript",
+            py: "python",
+            rb: "ruby",
+            sh: "bash",
+            shell: "bash",
+            yml: "yaml",
+            md: "markdown",
+            html: "markup",
+            xml: "markup",
+            svg: "markup",
+          }
+
+          const prismLanguage = languageMap[language] || language
+
+          return `<div class="markdown-code-container" data-language="${language}">
+    <div class="markdown-code-header">
+      <button class="markdown-copy-button" data-copy-id="${codeId}" title="Copy code">
+        <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <svg class="check-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20,6 9,17 4,12"></polyline>
+        </svg>
+      </button>
+    </div>
+    <pre class="markdown-code-block language-${prismLanguage}" data-code-id="${codeId}"><code class="language-${prismLanguage}">${escapedCode}</code></pre>
+  </div>`
         })
 
         // Inline code
@@ -142,46 +198,48 @@ export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, r
             .join("")
 
           return `<table class="markdown-table">
-            <thead class="markdown-thead">
-              <tr class="markdown-tr">${headerRow}</tr>
-            </thead>
-            <tbody class="markdown-tbody">
-              ${bodyRows}
-            </tbody>
-          </table>`
+          <thead class="markdown-thead">
+            <tr class="markdown-tr">${headerRow}</tr>
+          </thead>
+          <tbody class="markdown-tbody">
+            ${bodyRows}
+          </tbody>
+        </table>`
         })
 
         // Enhanced links with icons and better styling
         .replace(/\[([^\]]+)\]$$([^)]+)$$/gim, (match, text, href) => {
-          const linkInfo = resolveMarkdownLink(href)
+          const linkInfo = resolveMarkdownLink(href.trim())
 
           switch (linkInfo.type) {
             case "internal":
               return `<a href="#" data-internal-link="${linkInfo.path}" class="markdown-link markdown-link-internal" title="Navigate to: ${text}">
-                <svg class="markdown-internal-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 12l2 2 4-4"></path>
-                  <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.04.74 5.56 1.97"></path>
-                </svg>
-                <span class="markdown-link-text">${text}</span>
-              </a>`
+        <svg class="markdown-internal-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 12l2 2 4-4"></path>
+          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.04.74 5.56 1.97"></path>
+        </svg>
+        <span class="markdown-link-text">${text}</span>
+      </a>`
+
             case "external":
               return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="markdown-link markdown-link-external" title="Open external link: ${href}">
-                <svg class="markdown-external-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                  <polyline points="15,3 21,3 21,9"></polyline>
-                  <line x1="10" y1="14" x2="21" y2="3"></line>
-                </svg>
-                <span class="markdown-link-text">${text}</span>
-              </a>`
-            case "broken":
+        <svg class="markdown-external-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15,3 21,3 21,9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        <span class="markdown-link-text">${text}</span>
+      </a>`
+
+            default:
               return `<span class="markdown-link markdown-link-broken" title="File not found: ${href}">
-                <svg class="markdown-broken-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                <span class="markdown-link-text">${text}</span>
-              </span>`
+        <svg class="markdown-broken-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span class="markdown-link-text">${text}</span>
+      </span>`
           }
         })
 
@@ -206,27 +264,120 @@ export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, r
       // Handle numbered lists
       html = html.replace(/^\d+\. (.+)$/gim, '<li class="markdown-list-item">$1</li>')
 
-      // Handle paragraphs and line breaks
-      html = html.replace(/\n\n/gim, "</p><p class='markdown-paragraph'>")
-      html = html.replace(/\n/gim, "<br>")
-
-      // Wrap in paragraphs if not starting with a header, list, table, or code block
-      if (
-        !html.startsWith("<h") &&
-        !html.startsWith("<ul") &&
-        !html.startsWith("<ol") &&
-        !html.startsWith("<pre") &&
-        !html.startsWith("<table") &&
-        !html.startsWith("<blockquote")
-      ) {
-        html = "<p class='markdown-paragraph'>" + html + "</p>"
-      }
+      // Handle paragraphs and line breaks - split by double newlines for paragraphs
+      const paragraphs = html.split(/\n\s*\n/)
+      html = paragraphs
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0)
+        .map((p) => {
+          // Don't wrap headers, lists, tables, code blocks, or blockquotes in paragraphs
+          if (
+            p.startsWith("<h") ||
+            p.startsWith("<ul") ||
+            p.startsWith("<ol") ||
+            p.startsWith('<div class="markdown-code-container') ||
+            p.startsWith("<table") ||
+            p.startsWith("<blockquote") ||
+            p.startsWith("<hr")
+          ) {
+            return p
+          }
+          return `<p class="markdown-paragraph">${p.replace(/\n/g, "<br>")}</p>`
+        })
+        .join("")
 
       return html
     }
 
     setHtmlContent(convertMarkdownToHtml(content))
   }, [content, rootDirectory, onFileNavigate])
+
+  // Load Prism.js and apply syntax highlighting
+  useEffect(() => {
+    if (!htmlContent) return
+
+    const loadPrism = async () => {
+      // Load Prism CSS
+      if (!document.querySelector('link[href*="prism"]')) {
+        const link = document.createElement("link")
+        link.rel = "stylesheet"
+        link.href = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+        link.crossOrigin = "anonymous"
+        document.head.appendChild(link)
+      }
+
+      /** Load an external script only once, with CORS. */
+      const loadOnce = (src: string) =>
+        new Promise<void>((resolve, reject) => {
+          if (document.querySelector(`script[src="${src}"]`)) return resolve() // already present
+          const s = document.createElement("script")
+          s.src = src
+          s.crossOrigin = "anonymous"
+          s.onload = () => resolve()
+          s.onerror = reject
+          document.head.appendChild(s)
+        })
+
+      try {
+        // 1️⃣ Load Prism core first
+        await loadOnce("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js")
+
+        // 2️⃣ Load clike (required for many languages)
+        await loadOnce("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js")
+
+        // 3️⃣ Load javascript (required for jsx/tsx)
+        await loadOnce("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js")
+
+        // 4️⃣ Now load other languages in parallel
+        const langFiles = ["markup", "css", "typescript", "jsx", "python", "bash", "json", "yaml", "markdown"] as const
+
+        await Promise.all(
+          langFiles.map((l) =>
+            loadOnce(`https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-${l}.min.js`),
+          ),
+        )
+
+        // 5️⃣ Highlight after all scripts load
+        if (window.Prism) {
+          window.Prism.highlightAll()
+        }
+      } catch (error) {
+        console.warn("Failed to load Prism:", error)
+      }
+    }
+
+    loadPrism()
+  }, [htmlContent])
+
+  // Attach copy-to-clipboard listeners once the HTML is in the DOM
+  useEffect(() => {
+    const buttons = document.querySelectorAll<HTMLButtonElement>(".markdown-copy-button")
+    const handleClick = async (e: MouseEvent) => {
+      const btn = e.currentTarget as HTMLButtonElement
+      const codeId = btn.dataset.copyId
+      if (!codeId) return
+
+      const codeElement = document.querySelector(`[data-code-id="${codeId}"] code`)
+      if (!codeElement?.textContent) return
+
+      try {
+        await navigator.clipboard.writeText(codeElement.textContent)
+        const copyIcon = btn.querySelector(".copy-icon")
+        const checkIcon = btn.querySelector(".check-icon")
+        copyIcon?.classList.add("hidden")
+        checkIcon?.classList.remove("hidden")
+        setTimeout(() => {
+          copyIcon?.classList.remove("hidden")
+          checkIcon?.classList.add("hidden")
+        }, 2000)
+      } catch {
+        console.error("Failed to copy code")
+      }
+    }
+
+    buttons.forEach((btn) => btn.addEventListener("click", handleClick))
+    return () => buttons.forEach((btn) => btn.removeEventListener("click", handleClick))
+  }, [htmlContent])
 
   // Handle clicks on internal links
   useEffect(() => {
@@ -268,4 +419,11 @@ export function MarkdownViewer({ fileName, content, isLoading, onFileNavigate, r
       </div>
     </div>
   )
+}
+
+// Extend window type for Prism
+declare global {
+  interface Window {
+    Prism: any
+  }
 }
