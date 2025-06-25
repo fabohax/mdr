@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { FileExplorer } from "@/components/file-explorer"
 import { MarkdownViewer } from "@/components/markdown-viewer"
 import { FileNavigation } from "@/components/file-navigation"
@@ -267,11 +267,13 @@ export default function MarkdownReaderApp() {
     [selectedFile, rootDirectory, handleFileSelect],
   )
 
-  // Add keyboard event listener
-  useState(() => {
+  // Register / cleanup global keyboard shortcuts
+  useEffect(() => {
+    if (!selectedFile || !rootDirectory) return
+
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  })
+  }, [selectedFile, rootDirectory, handleKeyDown])
 
   return (
     <SidebarProvider>
@@ -323,7 +325,7 @@ export default function MarkdownReaderApp() {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <h1 className="text-lg font-semibold">Markdown Reader</h1>
+              <h1 className="text-lg font-semibold">mdr</h1>
               {selectedFile && (
                 <>
                   <Separator orientation="vertical" className="h-4" />
